@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "portaudio.h"
 #include "settings.h"
+#include <string.h>
 double noise = 0;
 
 typedef struct
@@ -142,6 +143,11 @@ int main(int argc, char * argv[])
 	numBytes = numSamples * sizeof(float);
 	data.recordedSamples = (float *) malloc( numBytes ); /* From now on, recordedSamples is initialised. */
     
+	if(strcmp(argv[1],"-h") == 0){
+		printf("Usage: ./record <filename>\nProgram writes the value of recorded sample after applying fft on it to <filename>\nFor same word spoken this values are similar\n");
+		return 0;
+	}	
+
 	if( data.recordedSamples == NULL ){
         	printf("Could not allocate record array.\n");
         	goto done;
