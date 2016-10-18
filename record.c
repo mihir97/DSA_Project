@@ -2,12 +2,7 @@
 #include <stdlib.h>
 #include "portaudio.h"
 #include "settings.h"
-
-#define FRAMES_PER_BUFFER (128)
-#define NUM_SECONDS     (2)
-#define SAMPLE_SILENCE  (0.0f)
-
-float noise = 0;
+double noise = 0;
 
 typedef struct
 {
@@ -62,7 +57,7 @@ static int recordCallback( const void *inputBuffer, void *outputBuffer,
 				avg = *ptr;
 			}	
 		}	
-		if(avg <= (noise + 0.1*noise)){
+		if(avg < (noise + 0.01*noise)){
         		for( i=0; i<framesToCalc; i++ ){
         			*wptr++ = SAMPLE_SILENCE; 
             			if( NUM_CHANNELS == 2 ) *wptr++ = SAMPLE_SILENCE;
@@ -276,7 +271,7 @@ int main(int argc, char * argv[])
     	printf("sample average = %lf\n", average );
 
     /* Write recorded data to a file. */
-	if(argc == 2) {
+/*	if(argc == 2) {
     	{
         	FILE  *fid;
         	fid = fopen(argv[1], "wb");
@@ -297,7 +292,7 @@ int main(int argc, char * argv[])
         	}
 	}
 }
-
+*/
 
  
     /* Playback recorded data.  -------------------------------------------- */
@@ -345,10 +340,12 @@ int main(int argc, char * argv[])
         printf("Done.\n");
 	}
 
+	apply_fft(data.recordedSamples, numSamples, argv[1]);
+
 done:
 	Pa_Terminate();
 	if( data.recordedSamples )       /* Sure it is NULL or valid. */
-		free( data.recordedSamples );
+//		free( data.recordedSamples );
 		if( err != paNoError ){
 			fprintf( stderr, "An error occured while using the portaudio stream\n" );
 			fprintf( stderr, "Error number: %d\n", err );
