@@ -16,35 +16,41 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include<portaudio.h>
-#define SAMPLE_RATE 16000
-#define NUM_CHANNELS 1
-#define FFT_SIZE (1024)
-#define FRAMES_PER_BUFFER (128)
-#define NUM_SECONDS     (20)
-#define SAMPLE_SILENCE  (0.0f)
-#define WORD_SPACE (0.25) /* In Seconds */
 
-typedef struct
-{
-	int	frameIndex;  /* Index into sample array. */
-	int	readIndex;	
-	int	maxFrameIndex;
-	float	*recordedSamples;
-	int	*wordIndices;
+
+#include<stdio.h>
+#include <stdlib.h>
+#include "settings.h"
+#define MAX(i,j) (i)>(j)?(i):(j)
+int readfromfile(char *fname, float *a){
+	FILE *fp;
+	fp = fopen(fname, "r");
+	int i = 0;
+	while(fscanf(fp,"%f" ,a + i) != EOF){
+		i++;
+	}
+	fclose(fp);
+	return i;
+
 }
-TestData;
+float compare(char *f1, char *f2){
+	int k = 0, z = 0, i , j;
+	float error = 4 * SAMPLE_RATE / FFT_SIZE;
+	float* a = (float*)calloc (10, sizeof(float));
+	float* b = (float*)calloc (10, sizeof(float));
 
+	i = readfromfile(f2, a);
+	j = readfromfile(f1, b);
 
-void apply_fft(float *, int, char *);
-float compare(char *, char *);
-char* findcurr(char *, char *);
-PaError add(char *);
-PaError replace(char *);
-PaError speechToText();
-PaError getStream(PaStream **, PaStreamParameters, TestData *,int);
-PaError init(PaStreamParameters *);
-PaError setNoise(PaStreamParameters);
-PaError play(TestData);
-void list();
-void usage();
+	k = 0;
+	
+	while(k < j  && k < i ){ 
+		if(b[k] > (a[k] - error) && b[k] < (a[k] + error)) {
+			z++;
+		}
+		k++;
+	}
+
+	float sim = (float)z/((float)MAX(i,j));
+	return sim;
+}

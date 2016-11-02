@@ -1,3 +1,23 @@
+/*
+ *      Speech Recognition in C:
+ *      Copyright (C) 2016  Mihir Mistry
+ *
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU General Public License as published by
+ *      the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ *
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU General Public License for more details.
+ *
+ *      You should have received a copy of the GNU General Public License
+ *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
@@ -6,7 +26,7 @@
 #define PI 3.147
 
 void apply_fft(float *data,int numSamples, char* argv){
-	FILE *fw, *fp1, *fp2, *fp3;
+	FILE *fw;
 	fw = fopen(argv, "wb");
 	if(!fw) printf("Error opening file.\n");
 	fftw_complex *in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*FFT_SIZE);
@@ -17,16 +37,12 @@ void apply_fft(float *data,int numSamples, char* argv){
 	double max = 0, ans;
 	float *samples = (float *) malloc(sizeof(float) * numSamples);
 
-	fp1 = fopen("test.dat1", "wb");
-	fp2 = fopen("test.dat2", "wb");
-	fp3 = fopen("test.dat3", "wb");
 
 	for(i = 0; i< numSamples ; i = i + FRAMES_PER_BUFFER){
 		if(data[i+1] != SAMPLE_SILENCE){
 			for(j = i; j < i + FRAMES_PER_BUFFER; j++){
 				samples[count] = data[j];
 				count++;
-				//fprintf(fp1,"%f\n", samples[j]);
 			}
 		}
 	}
@@ -37,17 +53,14 @@ void apply_fft(float *data,int numSamples, char* argv){
 		ans = max = 0;
 		i_max = 0;
 		for(j = 0; j < FFT_SIZE && sample_count < count; j++){
-			fprintf(fp1,"%f\n", samples[sample_count]);
 			double multiplier = 0.5 * ( 1 - cos(2 * PI * j / (FFT_SIZE - 1))); /*Applying Hann Window Function*/
 			in[j][0] = multiplier * samples[sample_count];
 			sample_count++;
-			fprintf(fp2, "%f\n", in[j][0]);
 		}	
 
 		fftw_execute(p);
 		
 		for(i = 0; i < j/2 + 1; i++){
-			fprintf(fp3, "%f\t%f\n", out[i][0], out[i][1]);
 			ans = pow(out[i][0],2) + pow(out[i][1], 2);
 			ans = sqrt(ans);
 			if(ans > max){
@@ -59,7 +72,7 @@ void apply_fft(float *data,int numSamples, char* argv){
 		/*Printing the Dominating Frequency in file*/
 		fprintf(fw, "%lf\n",(i_max * ((double)SAMPLE_RATE) / FFT_SIZE));
 	}
-
+	fclose(fw);
 	fftw_destroy_plan(p);
 	fftw_free(in);
 	fftw_free(out);
